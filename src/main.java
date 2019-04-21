@@ -1,0 +1,155 @@
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class main {
+    public static void main(String[] args) throws IOException {
+
+        lecturaFichero lf= new lecturaFichero();
+        Scanner snf = new Scanner(System.in);
+
+        System.out.println("Introduce el nombre del fichero: ");
+        String f= snf.nextLine();
+
+        Automata a = lf.guardaContenido(f);
+
+        ArrayList<Estado> listaActuales = new ArrayList<>();
+        listaActuales.add(a.getEstados().get(0));
+        a.setActual(listaActuales); //primer estado, e.inicial estado actual
+
+        Scanner sn = new Scanner(System.in);
+        boolean salir = false; //comrpobacion salir
+        int opcion; //Guardaremos la opcion del usuario
+        float credito=0; //credito total de la maquina
+        int contador=0; //contador iteraciones
+        boolean pregunta=false;//comprobacion op2fi
+        String variableString;
+
+        Scanner entrada= new Scanner(System.in);// se declara e inicializa una instancia Scanner.
+
+        while(!salir){ //loop menu
+            System.out.println("    =   MENU    =");
+            System.out.println("1. Función máquina expendedor");
+            System.out.println("2. Función cadena completa");
+            System.out.println("3. Salir");
+
+            System.out.println("Escribe una de las opciones:");
+            opcion = sn.nextInt();
+
+            switch(opcion){
+                case 1: //maquina espendedora
+                    contador=0;
+                    System.out.println("Has seleccionado la opción máquina expendedora.");
+                    System.out.println("Introduce cada moneda con un caracter.");
+                    a.setDevolver(false);//devolucion
+
+                    float cred=0; //inicio de credito por estado
+                    for(int i=0; i< a.getEstados().size();i++){
+                        if(i<=7){
+                            a.getEstados().get(i).setcredito(cred);
+                            cred+=0.5;
+                        }
+                        else if(i==8){
+                            a.getEstados().get(i).setcredito(0.5f);
+                        }
+                        else if(i==9){
+                            a.getEstados().get(i).setcredito(1);
+                        }
+                        else if(i==10){
+                            a.getEstados().get(i).setcredito(2);
+                        }
+                        else{
+                            a.getEstados().get(i).setcredito(0);
+                        }
+                    }
+
+                    while(!a.isDevolver()) { //mientras no se devuelva el dinero
+
+                        System.out.println("Iteración: " + contador);
+                        System.out.println("+++++++++++");
+                        for(int i=0; i<a.getActual().size();i++){ //estado actual
+                            System.out.println("Estado actual: " + a.getActual().get(i).getNombre());
+                            System.out.println("Crédito: " + a.getActual().get(i).getcredito() + "euros");
+                        }
+
+                        System.out.print("Ingrese una moneda o pulsa un botón: ");
+
+                        variableString = entrada.nextLine(); //nueva moneda
+
+                        for(int i=0; i<a.getActual().size();i++){
+                            System.out.println("Estado actual: " + a.getActual().get(i).getNombre());
+                            credito=a.getActual().get(i).getcredito();
+                            System.out.println("Crédito: " + a.getActual().get(i).getcredito() + " euros");
+                        }
+
+                        if (a.comprobacion(variableString)) { //siguiente estado
+                            System.out.println("Caracter aceptable.   Realizando test...");
+                            a.getSiguienteEstado(variableString);
+                            if(variableString.contains(Character.toString('d'))){
+                                a.setDevolver(true);
+                                System.out.println("Reintegro de " + credito + " euros");
+                            }
+                        } else { //caracter invalido
+                            System.out.println("Entrada no válida.  Error de alfabeto!");
+                        }
+
+                        System.out.println("+++++++++++");
+                        contador++; //nueva iteracion
+                    }
+                    break;
+                case 2: //cadena entera
+                    contador=0;
+                    System.out.println("Has seleccionado la opción autómata finito predefinido.");
+                    System.out.println("Introduce una cadena completa.");
+
+                    while(!a.isDevolver()) { //siempre
+                        System.out.println("Iteración: " + contador);
+                        System.out.println("+++++++++++");
+
+                        a.getActual().clear();
+                        listaActuales.add(a.getEstados().get(0));
+                        a.setActual(listaActuales);//inicio de estado actual al inicial
+
+                        System.out.print("Ingrese una cadena de entrada: ");
+
+                        variableString = entrada.nextLine();
+
+                        if (a.comprobacion(variableString)) { //si la cadena es valida realiza el testa
+                            System.out.println("Cadena aceptable.   Realizando test...");
+                            String s;
+                            for (int i = 0; i < variableString.length(); i++) { //test
+                                s = Character.toString(variableString.charAt(i));
+                                a.getSiguienteTransicion(s); //siguiente iteracion
+                                if (i == (variableString.length() - 1)) { //si es el ultimo comprueba si se acepta o no
+                                    for (int j = 0; j < a.getActual().size(); j++) {
+                                        System.out.println(a.getActual().get(j).getNombre());
+                                        if (a.getActual().get(j).isEsFinal()) {
+                                            pregunta = true;
+                                        }
+                                    }
+                                }
+                            }
+                            if (pregunta == true) { //impresion resultado
+                                System.out.println("CADENA VÁLIDA");
+                                pregunta=false;
+                            } else {
+                                System.out.println("CADENA DENEGADA");
+                            }
+                        } else { //si la cadena no vale
+                            System.out.println("Entrada no válida.  Error de alfabeto!");
+                        }
+
+                        System.out.println("+++++++++++");
+                        contador++;
+                    }
+                    break;
+                case 3: //salir
+                    System.out.println("Has seleccionado la opción salir");
+                    salir=true;
+                    break;
+                default: //opcion invalido
+                    System.out.println("Sólo números entre 1 y 3");
+            }
+        }
+    }
+}
